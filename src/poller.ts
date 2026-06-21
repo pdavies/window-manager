@@ -59,15 +59,13 @@ export class Poller {
       console.warn(`[poll] ${r.source} failed: ${r.error}`);
     }
 
-    // Heartbeat: one line every cycle so a healthy "nothing changed" is visible and
-    // distinguishable from a stuck loop. The bell/notifier still fires only on a flip.
     const changed = recommendation !== this.lastRecommendation;
     console.log(
       `[${snapshot.time}] windows ${recommendation ?? "undecided"}` +
         `${changed ? " (changed)" : " (unchanged)"} — ${reason}`,
     );
 
-    if (recommendation && recommendation !== this.lastRecommendation) {
+    if (recommendation && changed) {
       await dispatch(this.notifiers, {
         from: this.lastRecommendation,
         to: recommendation,

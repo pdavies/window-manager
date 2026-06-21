@@ -31,7 +31,7 @@ interface DataHubResponse {
  * warming (min → max), otherwise it's cooling (max → min). At the end of the hour the
  * estimate therefore lands back on `screenTemperature`.
  */
-export function estimateFromHourSlot(
+function estimateFromHourSlot(
   series: HourPoint[],
   nowMs: number,
 ): { tempC: number; at: string } | null {
