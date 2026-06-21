@@ -1,0 +1,21 @@
+{
+  "name": "window-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tells you whether to open or close your windows based on indoor vs outdoor temperature (close when it's hotter outside).",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+
+# Secrets and machine-specific config
+.env
+config.json
+
+*.log
+.DS_Store

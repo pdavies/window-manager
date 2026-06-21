@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Window Manager</title>
+<style>
+  :root { color-scheme: light dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font: 16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: #0f1115; color: #e7e9ee; padding: 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 24px;
+  }
+  h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: .02em; margin: 0; color: #9aa3b2; }
+  .banner {
+    width: 100%; max-width: 720px; border-radius: 18px; padding: 40px 24px; text-align: center;
+    transition: background .4s ease;
+  }
+  .banner .verb { font-size: clamp(2.5rem, 12vw, 5rem); font-weight: 800; letter-spacing: .02em; margin: 0; }
+  .banner .reason { margin: 12px auto 0; max-width: 48ch; opacity: .9; }
+  .open    { background: linear-gradient(160deg, #16451f, #1f7a34); }
+  .closed  { background: linear-gradient(160deg, #5a1212, #a3242a); }
+  .unknown { background: #20242d; }
+  .grid { width: 100%; max-width: 720px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #181b22; border: 1px solid #262b35; border-radius: 14px; padding: 18px; }
+  .card h2 { margin: 0 0 12px; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: #9aa3b2; }
+  .avg { font-size: 2.2rem; font-weight: 700; margin: 0 0 12px; }
+  .avg small { font-size: .9rem; font-weight: 500; color: #9aa3b2; }
+  .row { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid #20242d; }
+  .row:first-of-type { border-top: 0; }
+  .row .name { color: #c4cad6; }
+  .row .val { font-variant-numeric: tabular-nums; }
+  .row.bad .name, .row.bad .val { color: #e0727a; }
+  footer { color: #6b7383; font-size: .8rem; text-align: center; }
+  footer .dot { color: #2fae4a; }
+</style>
+</head>
+<body>
+  <h1>🪟 Window Manager</h1>
+  <div id="banner" class="banner unknown">
+    <p class="verb" id="verb">—</p>
+    <p class="reason" id="reason">Waiting for the first reading…</p>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h2>Indoor</h2>
+      <p class="avg"><span id="indoorAvg">—</span><small> avg</small></p>
+      <div id="indoorRows"></div>
+    </div>
+    <div class="card">
+      <h2>Outdoor</h2>
+      <p class="avg"><span id="outdoorAvg">—</span><small> avg</small></p>
+      <div id="outdoorRows"></div>
+    </div>
+  </div>
+  <footer>
+    Reading from <span id="dataTime">—</span> ·
+    <span class="dot">●</span> last checked <span id="checked">never</span>
+  </footer>
+
+<script>
+const REFRESH_MS = 30000;
+const fmt = (t) => (t === null || t === undefined) ? "—" : t.toFixed(1) + "°C";
+
+function average(readings) {
+  const vals = readings.filter((r) => r.ok && r.tempC !== null && r.tempC !== undefined).map((r) => r.tempC);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+function rows(readings) {
+  return readings.map((r) => {
+    const cls = r.ok ? "row" : "row bad";
+    const val = r.ok ? fmt(r.tempC) : (r.error ? "error" : "—");
+    return '<div class="' + cls + '"><span class="name">' + r.source + '</span><span class="val">' + val + '</span></div>';
+  }).join("");
+}
+
+async function refresh() {
+  try {
+    const res = await fetch("/api/state", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const s = (await res.json()).current;
+
+    // Always show that we checked, even before the first poll completes.
+    document.getElementById("checked").textContent = new Date().toLocaleTimeString();
+    if (!s) return;
+
+    const banner = document.getElementById("banner");
+    const rec = s.recommendation || "unknown";
+    banner.className = "banner " + rec;
+    document.getElementById("verb").textContent =
+      rec === "open" ? "OPEN" : rec === "closed" ? "CLOSED" : "—";
+    document.getElementById("reason").textContent = s.reason || "";
+
+    document.getElementById("indoorAvg").textContent = fmt(average(s.indoor));
+    document.getElementById("outdoorAvg").textContent = fmt(average(s.outdoor));
+    document.getElementById("indoorRows").innerHTML = rows(s.indoor);
+    document.getElementById("outdoorRows").innerHTML = rows(s.outdoor);
+    document.getElementById("dataTime").textContent = new Date(s.time).toLocaleTimeString();
+  } catch (e) {
+    console.error("refresh failed:", e);
+    document.getElementById("checked").textContent = "failed (" + new Date().toLocaleTimeString() + ")";
+  }
+}
+
+refresh();
+setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>

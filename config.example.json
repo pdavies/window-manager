@@ -1,0 +1,10 @@
+{
+  "indoorSensors": [
+    { "name": "Living room", "deviceId": "00000000-0001-0001-0001-000000000001" },
+    { "name": "Bedroom", "deviceId": "00000000-0002-0002-0002-000000000002" }
+  ],
+  "location": { "latitude": 51.5074, "longitude": -0.1278 },
+  "hysteresisC": 0.5,
+  "pollIntervalMinutes": 5,
+  "httpPort": 3000
+}
