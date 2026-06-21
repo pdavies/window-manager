@@ -1,19 +1,16 @@
 # Window Manager 🪟
 
-A small Node/TypeScript app that tells you when to **open or close your windows** based
-on indoor vs. outdoor temperature. The rule is the counterintuitive one for hot weather:
-when it's hotter outside than in, keep windows **closed** to keep the heat out; open them
-once it's cooler outside.
+A small Node/TypeScript app that tells me when to close my windows in a heatwave to keep the hot air out, based on indoor vs. outdoor temperature. Not all of us have air con, you know.
 
 Every 5 minutes it polls:
 
-- **Indoor:** your Kaiterra sensors (room temperature, `rtemp`)
+- **Indoor:** Kaiterra sensors
 - **Outdoor:** [Open-Meteo](https://open-meteo.com) (keyless) and, optionally, the
   [Met Office Weather DataHub](https://datahub.metoffice.gov.uk) Site Specific forecast
 
 …then averages each side, decides open/closed with a hysteresis deadband (so it doesn't
 flap), and — when the recommendation **changes** — logs it and rings the terminal bell a
-few times. A small dashboard is served on your LAN.
+few times. A small dashboard is served via HTTP too.
 
 ## Setup
 
@@ -23,10 +20,6 @@ cp .env.example .env            # add KAITERRA_API_KEY (and METOFFICE_API_KEY if
 cp config.example.json config.json   # add your device IDs and lat/long
 npm start
 ```
-
-Then open the dashboard URL printed on startup (e.g. `http://192.168.x.x:3000/`).
-
-Both `.env` and `config.json` are gitignored.
 
 ## Configuration
 
@@ -49,15 +42,12 @@ the app runs on Open-Meteo alone without it).
 - `outdoor − indoor ≤ −hysteresis` → **open** (cooler outside; let cool air in)
 - otherwise → hold the current recommendation
 
-The **Met Office** value is interpolated between the two hourly `screenTemperature`
-forecast points bracketing "now", giving a current-temperature estimate that tracks the
-fraction through the hour.
+The **Met Office** value is interpolated between min and max temps for the relevant 1h band, based on the current time and whether temps are going up or down.
 
 ## Adding a notifier
 
 Notifications are pluggable. Implement the `Notifier` interface (`src/notify/index.ts`)
-and add your instance to the list in `src/index.ts`. A desktop banner, ntfy.sh push, or
-Discord/Slack webhook are all a few lines each.
+and add your instance to the list in `src/index.ts`.
 
 ## Run
 
