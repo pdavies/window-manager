@@ -41,18 +41,12 @@ export function decide(
   }
 
   const diff = outdoorAvgC - indoorAvgC;
-  const where = `outdoor ${outdoor.map((t) => fmt(t.tempC)).join(", ")} vs indoor ${indoor.map((t) => fmt(t.tempC)).join(", ")}`;
+  const tempsString = `outdoor ${outdoor.map((t) => fmt(t.tempC)).join(", ")} vs indoor ${indoor.map((t) => fmt(t.tempC)).join(", ")}`;
 
-  if (diff >= hysteresisC) {
+  if (diff >= hysteresisC || diff <= -hysteresisC) {
     return {
-      recommendation: "closed",
-      reason: `It's ${fmt(diff)} warmer outside than in (${where}) — close to keep the heat out.`,
-    };
-  }
-  if (diff <= -hysteresisC) {
-    return {
-      recommendation: "open",
-      reason: `It's ${fmt(-diff)} cooler outside than in (${where}) — open to let cool air in.`,
+      recommendation: diff > 0 ? "closed" : "open",
+      reason: `It's ${fmt(Math.abs(diff))} ${diff > 0 ? "warmer" : "cooler"} outside than in (${tempsString})`,
     };
   }
 
@@ -60,6 +54,6 @@ export function decide(
   const held: Recommendation = previous ?? "open";
   return {
     recommendation: held,
-    reason: `Within ${fmt(hysteresisC)} of indoor (${where}) — holding ${held}.`,
+    reason: `Within ${fmt(hysteresisC)} of indoor (${tempsString}) — holding ${held}.`,
   };
 }
